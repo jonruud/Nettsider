@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HTML + CSS Læreside for Nybegynnere (med forhåndsvisning)</title>
+  <style>
+    :root{
+      --bg:#0f172a;/* slate-900 */
+      --panel:#0b1223;/* darker */
+      --muted:#94a3b8;/* slate-400 */
+      --text:#e2e8f0;/* slate-200 */
+      --brand:#60a5fa;/* blue-400 */
+      --accent:#22d3ee;/* cyan-400 */
+      --ok:#34d399;/* green-400 */
+      --warn:#fbbf24;/* amber-400 */
+      --danger:#f87171;/* red-400 */
+      --border:#1f2a44;/* slate-ish */
+      --code-bg:#0b1020;
+      --header-h:60px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0; font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, #1b284a 0, transparent 60%),
+                 radial-gradient(1200px 600px at 110% 110%, #0e2a38 0, transparent 60%),
+                 var(--bg);
+      /* Uavhengig scrolling per kolonne */
+      overflow: hidden;
+    }
+    header{
+      position: sticky; top:0; z-index: 5;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(0deg, rgba(15,23,42,0.7), rgba(15,23,42,0.7));
+      border-bottom:1px solid var(--border);
+      padding: 12px 18px;
+      display:flex; gap:16px; align-items:center; justify-content:space-between;
+      min-height: var(--header-h);
+    }
+    header .title{ font-weight:700; letter-spacing:.3px; }
+    header .title strong{ color:var(--brand); }
+    header .actions{ display:flex; gap:8px; }
+    .btn{
+      appearance:none; border:1px solid var(--border); background: #0b1326; color:var(--text);
+      padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;
+    }
+    .btn:hover{ border-color:#2b3b63; background:#0c1732; }
+    .btn.primary{ background:linear-gradient(180deg, #1f3d6d, #15325d); border-color:#2d4f87; color:#e6f0ff; }
+    .btn.primary:hover{ filter: brightness(1.05); }
+
+    .screen{
+      height: calc(100dvh - var(--header-h));
+      display:grid; grid-template-columns: 1fr 2fr; gap: 0;
+    }
+    aside{
+      border-right:1px solid var(--border); background: linear-gradient(180deg, #0a1123, #0b1223);
+      padding: 18px 16px 24px 18px; overflow:auto; /* egen scroll */
+    }
+    main{
+      display:flex; flex-direction:column; gap: 10px; padding: 16px; min-width:0; overflow:auto; /* egen scroll */
+    }
+
+    .step{
+      background: #0a1226; border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px;
+    }
+    .step h3{ margin:.2rem 0 .6rem; font-size:1.05rem; color:var(--accent); }
+    .step p, .step ul{ margin:.35rem 0 .35rem; color:var(--muted); }
+    .step li{ margin:.2rem 0; }
+    .kbd{ border:1px solid var(--border); background:#0b1326; color:#cbd5e1; padding:2px 6px; border-radius:6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:.85em }
+    code, pre{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    pre{ white-space: pre-wrap; word-wrap: break-word; background:#091022; border:1px solid var(--border); border-radius:10px; padding:10px; color:#dbeafe; }
+
+    .tip{ border-left:3px solid var(--brand); padding:8px 10px; background:#0a1430; border-radius:6px; color:#c9d4ea; }
+    .warn{ border-left:3px solid var(--warn); padding:8px 10px; background:#2b2305; border-radius:6px; color:#ffe8b3; }
+
+    .toolbar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .toolbar .spacer{ flex:1 }
+
+    label{ font-weight:600; color:#cbd5e1; display:block; margin-bottom:6px; }
+    textarea#editor{
+      width:100%; min-height: 42vh; resize: vertical;
+      background: var(--code-bg); color:#e5e7eb; border:1px solid var(--border); border-radius:10px; padding:12px; tab-size:2;
+      caret-color: var(--accent);
+    }
+    .preview-wrap{ display:flex; flex-direction:column; gap:8px; }
+    .preview{
+      width:100%; min-height: 36vh; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:white;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
+    }
+    iframe{ width:100%; height:100%; border:0; background:white; }
+
+    details{ border:1px dashed var(--border); border-radius:10px; padding:8px 10px; margin:8px 0 12px; }
+    details > summary{ cursor:pointer; color:#cbd5e1; font-weight:600; }
+
+    .hint{ color:#9dd4ff; }
+
+    @media (max-width: 900px){
+      .screen{ grid-template-columns: 1fr; }
+      aside{ order:2 }
+      main{ order:1 }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">📘 <strong>HTML&nbsp;+&nbsp;CSS</strong> — interaktiv læreside for nybegynnere</div>
+    <div class="actions">
+      <button class="btn" id="resetBtn" title="Tøm og sett inn grunnmal">Tøm</button>
+      <button class="btn primary" id="runBtn" title="Oppdater forhåndsvisning (Ctrl/Cmd+Enter)">Kjør ⏵</button>
+    </div>
+  </header>
+
+  <section class="screen">
+    <aside>
+      <div class="step">
+        <h3>Velkommen! 👋 Hva er HTML og CSS?</h3>
+        <p><strong>HTML</strong> er “innholdet” og strukturen på en nettside (overskrifter, tekst, bilder, lenker). Tenk HTML som byggesteiner/klosser.</p>
+        <p><strong>CSS</strong> er “stilen” og utseendet (farger, størrelser, plassering). Tenk CSS som maling og dekor.</p>
+        <div class="tip"><strong>Mental modell:</strong> HTML = hva som er på siden. CSS = hvordan det ser ut.</div>
+        <ul>
+          <li><span class="kbd">Kjør</span> eller <span class="kbd">Ctrl/Cmd + Enter</span> oppdaterer forhåndsvisningen.</li>
+          <li>Du kan lime inn eksempler via knappene “Sett inn i editor”.</li>
+          <li>Arbeidet ditt lagres automatisk i nettleseren (lokalt), så du kan fortsette senere.</li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <h3>Hvordan “leser” nettleseren koden?</h3>
+        <p>HTML består av <strong>tagger</strong> (start og slutt) som omslutter innhold:</p>
+        <pre><code>&lt;tagg&gt;Innhold her&lt;/tagg&gt;</code></pre>
+        <p>Eksempel:</p>
+        <pre><code>&lt;p&gt;Dette er et avsnitt&lt;/p&gt;</code></pre>
+        <p>CSS bruker <strong>selektorer</strong> for å peke på hvilke HTML-elementer som skal styles:</p>
+        <pre><code>p { color: blue; }</code></pre>
+        <div class="tip"><strong>Analogien:</strong> HTML sier “Dette er en avsnitt-tekst”. CSS sier “Gjør avsnitt-tekst blå”.</div>
+      </div>
+
+      <div class="step">
+        <h3>Det minste du trenger å vite (HTML-struktur)</h3>
+        <ul>
+          <li><code>&lt;!DOCTYPE html&gt;</code> — forteller at dette er HTML5.</li>
+          <li><code>&lt;html lang="nb"&gt;...&lt;/html&gt;</code> — rotnoden (alt inni her er nettsiden din). <code>lang</code> hjelper språk/tilgjengelighet.</li>
+          <li><code>&lt;head&gt;...&lt;/head&gt;</code> — usynlig info, f.eks. <code>&lt;meta&gt;</code> (tegnsett, mobil), <code>&lt;title&gt;</code> (fanetittel), <code>&lt;style&gt;</code> (CSS).</li>
+          <li><code>&lt;body&gt;...&lt;/body&gt;</code> — synlig innhold (overskrifter, tekst, bilder).</li>
+        </ul>
+        <details>
+          <summary>Se et komplett, lite skjelett</summary>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="nb"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;title&gt;Min side&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  Innhold her …
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </details>
+      </div>
+
+      <div class="step">
+        <h3>CSS på 1–2–3</h3>
+        <p>Legg CSS i en <code>&lt;style&gt;</code>-blokk (gjerne inni <code>&lt;head&gt;</code>):</p>
+<pre><code>&lt;style&gt;
+  body { font-family: system-ui, sans-serif; }
+  h1 { color: #2563eb; }
+  p  { color: #334155; }
+&lt;/style&gt;</code></pre>
+        <ul>
+          <li><strong>Selektor</strong>: hvem styles? (<code>h1</code>, <code>.klasse</code>, <code>#id</code>)</li>
+          <li><strong>Egenskap</strong>: hva endres? (<code>color</code>, <code>margin</code>, <code>background</code>)</li>
+          <li><strong>Verdi</strong>: til hva? (<code>#2563eb</code>, <code>16px</code>, <code>flex</code>)</li>
+        </ul>
+        <div class="tip"><strong>Spesifisitet:</strong> <code>#id</code> &gt; <code>.klasse</code> &gt; element. Ved lik “styrke” vinner regelen som står sist.</div>
+      </div>
+
+      <div class="step">
+        <h3>Oppgave 1 — Få noe på skjermen</h3>
+        <ol>
+          <li>Lag en tittel (<code>&lt;h1&gt;</code>) og et avsnitt (<code>&lt;p&gt;</code>).</li>
+          <li>Endre fanetittel i <code>&lt;title&gt;</code>.</li>
+        </ol>
+        <details>
+          <summary>Sett inn eksempel</summary>
+<pre><code>&lt;h1&gt;Hei verden!&lt;/h1&gt;
+&lt;p&gt;Dette er min første webside.&lt;/p&gt;</code></pre>
+          <button class="btn" data-insert="#ex1">Sett inn i editor</button>
+          <template id="ex1">
+<h1>Hei verden!</h1>
+<p>Dette er min første webside.</p>
+          </template>
+        </details>
+        <p><em>Hva skjer her?</em> <code>&lt;h1&gt;</code> er en stor overskrift. <code>&lt;p&gt;</code> er et avsnitt (tekstblokk).</p>
+      </div>
+
+      <div class="step">
+        <h3>Oppgave 2 — Gi siden stil</h3>
+        <p>Legg til en <code>&lt;style&gt;</code>-blokk og endre font, farge og mellomrom.</p>
+        <details>
+          <summary>Sett inn eksempel</summary>
+<pre><code>&lt;style&gt;
+  body { font-family: system-ui, sans-serif; margin: 2rem; }
+  h1 { color: #2563eb; }
+  p  { color: #334155; }
+&lt;/style&gt;</code></pre>
+          <button class="btn" data-insert="#ex2">Sett inn i editor</button>
+          <template id="ex2">
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; }
+  h1 { color: #2563eb; }
+  p  { color: #334155; }
+</style>
+          </template>
+        </details>
+        <p><em>Hvorfor i <code>&lt;head&gt;</code>?</em> Nettleseren laster og forstår stilen før den tegner innholdet.</p>
+      </div>
+
+      <div class="step">
+        <h3>Oppgave 3 — Lag en kort-boks (boksmodellen)</h3>
+        <p>Lag en boks med kantlinje, fyll (padding) og luft rundt (margin).</p>
+        <details>
+          <summary>Sett inn eksempel</summary>
+<pre><code>&lt;div class="kort"&gt;
+  &lt;h2&gt;En fin boks&lt;/h2&gt;
+  &lt;p&gt;Her er litt innhold.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .kort {
+    border: 2px solid #94a3b8;  /* kantlinje */
+    padding: 16px;               /* luft inni */
+    margin: 16px 0;              /* luft utenfor */
+    border-radius: 8px;          /* avrundede hjørner */
+    background: #f8fafc;         /* lys bakgrunn */
+    color: #0f172a;              /* mørk tekst */
+  }
+&lt;/style&gt;</code></pre>
+          <button class="btn" data-insert="#ex3">Sett inn i editor</button>
+          <template id="ex3">
+<div class="kort">
+  <h2>En fin boks</h2>
+  <p>Her er litt innhold.</p>
+</div>
+
+<style>
+  .kort {
+    border: 2px solid #94a3b8;
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #0f172a;
+  }
+</style>
+          </template>
+        </details>
+        <div class="tip"><strong>Husk:</strong> <em>padding = inni</em>, <em>margin = utenfor</em>, <em>border = kanten</em>.</div>
+      </div>
+
+      <div class="step">
+        <h3>Oppgave 4 — To kort ved siden av hverandre (flexbox)</h3>
+        <p>Legg to kort i en rad. På mobil skal de legge seg under hverandre.</p>
+        <details>
+          <summary>Sett inn eksempel</summary>
+<pre><code>&lt;div class="rad"&gt;
+  &lt;div class="kort"&gt;Kort A&lt;/div&gt;
+  &lt;div class="kort"&gt;Kort B&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .rad { display: flex; gap: 12px; }
+  .kort { flex: 1; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; }
+  @media (max-width: 600px){
+    .rad { flex-direction: column; }
+  }
+&lt;/style&gt;</code></pre>
+          <button class="btn" data-insert="#ex4">Sett inn i editor</button>
+          <template id="ex4">
+<div class="rad">
+  <div class="kort">Kort A</div>
+  <div class="kort">Kort B</div>
+</div>
+
+<style>
+  .rad { display: flex; gap: 12px; }
+  .kort { flex: 1; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; }
+  @media (max-width: 600px){
+    .rad { flex-direction: column; }
+  }
+</style>
+          </template>
+        </details>
+        <p><em>Hva gjør dette?</em> <code>display:flex</code> legger barna i en rad. <code>gap</code> lager avstand. Media query bytter til kolonne på små skjermer.</p>
+      </div>
+
+      <div class="step">
+        <h3>Oppgave 5 — Farger med variabler</h3>
+        <p>Bruk CSS-variabler for å samle fargene på ett sted.</p>
+        <details>
+          <summary>Sett inn eksempel</summary>
+<pre><code>&lt;style&gt;
+  :root{ --primar: #2563eb; --tekst: #0f172a; }
+  h1{ color: var(--primar); }
+  p{ color: var(--tekst); }
+&lt;/style&gt;</code></pre>
+          <button class="btn" data-insert="#ex5">Sett inn i editor</button>
+          <template id="ex5">
+<style>
+  :root{ --primar: #2563eb; --tekst: #0f172a; }
+  h1{ color: var(--primar); }
+  p{ color: var(--tekst); }
+</style>
+          </template>
+        </details>
+        <p><em>Fordel:</em> Endrer du verdien i <code>:root</code>, oppdateres alle steder som bruker <code>var(--…)</code>.</p>
+      </div>
+      
+      <div class="step">
+        <h3>Oppgave 6 — Legge til et bilde</h3>
+        <p>For å vise et bilde, bruker du <code>&lt;img&gt;</code>-taggen. Denne taggen "lukker seg selv" (den trenger ikke <code>&lt;/img&gt;</code>).</p>
+        <p>De to viktigste attributtene er:</p>
+        <ul>
+          <li><code>src</code> (source): URL-en (adressen) til bildet.</li>
+          <li><code>alt</code> (alternativ tekst): Beskrivelse for skjermlesere (viktig!).</li>
+        </ul>
+        <p>Du bør også legge til litt CSS for å sikre at bildet ikke blir for stort:</p>
+        <pre><code>img { max-width: 100%; height: auto; border-radius: 8px; }</code></pre>
+        <details>
+          <summary>Sett inn eksempel</summary>
+<pre><code>&lt;h2&gt;Et bildeeksempel&lt;/h2&gt;
+&lt;img 
+  src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80" 
+  alt="En laptop på et skrivebord med kode på skjermen"
+&gt;
+
+&lt;style&gt;
+  img { 
+    max-width: 100%; /* Sørger for at bildet ikke blir bredere enn 'forelderen' */
+    height: auto;    /* Beholder sideforholdet */
+    border-radius: 8px; /* Litt penere hjørner */
+  }
+&lt;/style&gt;</code></pre>
+          <button class="btn" data-insert="#ex6">Sett inn i editor</button>
+          <template id="ex6">
+<h2>Et bildeeksempel</h2>
+<img 
+  src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80" 
+  alt="En laptop på et skrivebord med kode på skjermen"
+>
+
+<style>
+  img { 
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+</style>
+          </template>
+        </details>
+        <div class="tip"><strong>Hvor finner jeg bilder?</strong> Du kan bruke gratis bildesider som <span class="kbd">Unsplash</span> eller <span class="kbd">Pexels</span>, eller en plassholder-tjeneste.</div>
+      </div>
+      <div class="step">
+        <h3>Vanlige feil (og raske løsninger)</h3>
+        <ul>
+          <li><strong>ÆØÅ/emoji ser rart ut:</strong> Mangler ofte <code>&lt;meta charset="utf-8"&gt;</code> i <code>&lt;head&gt;</code>.</li>
+          <li><strong>CSS “virker ikke”:</strong> Sjekk at <code>&lt;style&gt;…&lt;/style&gt;</code> er riktig stavet og plassert, og at det ikke mangler <code>}</code>.</li>
+          <li><strong>Ingenting vises:</strong> Har du <code>&lt;body&gt;</code> med innhold? Bruk “Kjør”-knappen for å oppdatere.</li>
+          <li><strong>Alt ligger klint sammen:</strong> Legg til <code>margin</code> på elementer (f.eks. <code>body { margin: 2rem; }</code>).</li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <h3>Minisjekk ✅</h3>
+        <ul>
+          <li>Har du <code>&lt;!DOCTYPE html&gt;</code> øverst?</li>
+          <li>Har du <code>&lt;html lang="nb"&gt;</code> rundt alt?</li>
+          <li>Har du <code>&lt;head&gt;</code> med <code>&lt;meta charset&gt;</code>, <code>&lt;meta viewport&gt;</code> og <code>&lt;title&gt;</code>?</li>
+          <li>Har du <code>&lt;body&gt;</code> med <code>&lt;h1&gt;</code> og <code>&lt;p&gt;</code>?</li>
+          <li>Bruker du en <code>&lt;style&gt;</code>-blokk for CSS?</li>
+        </ul>
+      </div>
+
+      <div class="tip">
+        Neste steg-ideer: Legg inn et bilde (<code>&lt;img alt="..." src="..."&gt;</code>), en lenke (<code>&lt;a href="..."&gt;</code>), en liste (<code>&lt;ul&gt;</code> / <code>&lt;ol&gt;</code>), og prøv <code>display:grid</code> for layout.
+      </div>
+    </aside>
+
+    <main>
+      <div class="toolbar">
+        <button class="btn" id="insertSkeleton">Sett inn grunnmal</button>
+        <button class="btn" id="insertStarter">Sett inn enkel start</button>
+
+        <button class="btn" id="indentBtn" title="Sett inn tab/innrykk ved markøren eller indentér markert tekst">Innrykk ⇥</button>
+
+        <div class="spacer"></div>
+        <button class="btn" id="downloadBtn" title="Last ned som .html">Last ned koden</button>
+      </div>
+
+      <div>
+        <label for="editor">Kode (HTML + CSS):</label>
+        <textarea id="editor" spellcheck="false" aria-label="Kodeeditor" placeholder="Skriv eller lim inn HTML + CSS. Bruk 'Sett inn grunnmal' for å få et startskjelett."></textarea>
+      </div>
+
+      <div class="preview-wrap">
+        <label>Forhåndsvisning:</label>
+        <div class="preview">
+          <iframe id="preview" sandbox="allow-same-origin"></iframe>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const iframe = document.getElementById('preview');
+    const runBtn = document.getElementById('runBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const insertSkeletonBtn = document.getElementById('insertSkeleton');
+    const insertStarterBtn = document.getElementById('insertStarter');
+
+    // NY: Innrykk-knapp
+    const indentBtn = document.getElementById('indentBtn');
+
+    // Konfigurer innrykk: bruk '\t' (tab) eller f.eks. '  ' (to mellomrom)
+    const INDENT_UNIT = '\t'; // bytt til '  ' for 2 spaces, eller '    ' for 4
+
+    const SKELETON = `<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Min side</title>
+  <style>
+    body{ font-family: system-ui, sans-serif; margin: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>Hei verden!</h1>
+  <p>Rediger meg ✨</p>
+</body>
+</html>`;
+
+    const STARTER = `<h1>Velkommen</h1>
+<p>Dette er en liten start.</p>
+<style>
+  body{ font-family: system-ui, sans-serif; margin: 2rem; }
+  h1{ color:#2563eb }
+</style>`;
+
+    function updatePreview(){
+      const code = editor.value;
+      iframe.srcdoc = code;
+      localStorage.setItem('htmlcss.playground', code);
+    }
+
+    let t = null;
+    editor.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(updatePreview, 300); // debounce for bedre ytelse
+    });
+
+    runBtn.addEventListener('click', updatePreview);
+
+    resetBtn.addEventListener('click', () => {
+      if(confirm('Tøm editoren og sett inn grunnmal?')){
+        editor.value = SKELETON; updatePreview();
+      }
+    });
+
+    insertSkeletonBtn.addEventListener('click', () => {
+      editor.value = SKELETON; updatePreview();
+    });
+
+    insertStarterBtn.addEventListener('click', () => {
+      const at = editor.selectionStart || editor.value.length;
+      editor.setRangeText(STARTER, at, at, 'end');
+      updatePreview();
+    });
+
+    // Insert-knapper i tutorialen
+    document.querySelectorAll('button[data-insert]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sel = btn.getAttribute('data-insert');
+        const tpl = document.querySelector(sel);
+        if(!tpl) return;
+        const snippet = tpl.innerHTML.replace(/^\n/, '');
+        const at = editor.selectionStart || editor.value.length;
+        editor.setRangeText(snippet, at, at, 'end');
+        updatePreview();
+      });
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([editor.value], {type:'text/html'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'min_side.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
+
+    // Hurtigtast Ctrl/Cmd + Enter
+    document.addEventListener('keydown', (e) => {
+      if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+        e.preventDefault(); updatePreview();
+      }
+    });
+
+    // --- NYTT: Innrykk-funksjoner ---
+    function indentSelection(textarea, unit = INDENT_UNIT){
+      const value = textarea.value;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      // Finn linjestarter for markering
+      const lineStart = value.lastIndexOf('\n', start - 1) + 1; // -1 => fant ikke
+      const lineEnd   = value.indexOf('\n', end);
+      const rangeEndIndex = (lineEnd === -1) ? value.length : lineEnd;
+
+      const hasMultiLine = value.slice(lineStart, rangeEndIndex).includes('\n');
+
+      if (!hasMultiLine && start === end){
+        // Bare sett inn tab ved markøren
+        textarea.setRangeText(unit, start, end, 'end');
+        return;
+      }
+
+      // Indenter alle linjer som er del av markeringen
+      const before = value.slice(0, lineStart);
+      const block  = value.slice(lineStart, rangeEndIndex);
+      const after  = value.slice(rangeEndIndex);
+
+      const indented = block.split('\n').map(l => unit + l).join('\n');
+
+      // Oppdater tekst
+      textarea.value = before + indented + after;
+
+      // Oppdater markering (behold markert område for evt. flere innrykk)
+      const addedPerLine = unit.length;
+      const linesCount = block.split('\n').length;
+      const newStart = start + addedPerLine; // første linje får innrykk
+      const newEnd   = end + (addedPerLine * linesCount);
+      textarea.selectionStart = newStart;
+      textarea.selectionEnd   = newEnd;
+    }
+
+    indentBtn.addEventListener('click', () => {
+      indentSelection(editor);
+      editor.focus();
+    });
+
+    // Valgfritt: støtt Tab-tasten til å lage innrykk i textarea
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab'){
+        e.preventDefault();
+        indentSelection(editor);
+      }
+    });
+
+    // Last fra localStorage eller grunnmal
+    const saved = localStorage.getItem('htmlcss.playground');
+    editor.value = saved && saved.trim().length ? saved : SKELETON;
+    updatePreview();
+  </script>
+</body>
+</html>
